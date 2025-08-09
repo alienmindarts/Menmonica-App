@@ -26,6 +26,11 @@ def options_convert():
 def options_random_phrase():
     return ('', 204)
 
+# Simple health endpoint for Render health checks
+@app.get('/api/health')
+def health():
+    return jsonify({'status': 'ok'})
+
 @app.get('/')
 def index():
     return render_template('index.html')
