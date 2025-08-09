@@ -106,3 +106,27 @@ Both index and practice pages already use window.API_BASE:
 - Test convert and practice flows on your GitHub Pages site
 
 Once you have the live Render URL, update [docs/config.js](docs/config.js) or tell me the URL and I’ll set it.
+---
+
+## Handling Render free plan cold starts and 405 on /api/convert
+
+- Render free plan sleeps your service after inactivity. The first request wakes it and can take up to ~50s. During cold start you might see timeouts on the frontend.
+- Your backend exposes a fast health endpoint that also warms caches in the background:
+  - Open https://YOUR-BACKEND.onrender.com/api/health or call it from a script
+  - This returns {"status":"ok"} quickly and triggers cache warm-up in the background via [app.get('/api/health')](app.py:31)
+- Expected 405 when opening /api/convert in a browser:
+  - /api/convert is POST-only. Hitting it in a browser (GET) returns “Method Not Allowed”
+  - To test convert from a terminal, POST JSON:
+    - PowerShell: Invoke-RestMethod -Method Post -ContentType "application/json" -Uri "https://YOUR-BACKEND.onrender.com/api/convert" -Body '{"number":"3279","maxCombos":10}'
+    - curl: curl -s -X POST "https://YOUR-BACKEND.onrender.com/api/convert" -H "Content-Type: application/json" -d '{"number":"3279","maxCombos":10}'
+- Frontend “wake” behavior:
+  - The UI now pings /api/health on load to pre-wake the backend and shows a banner while it wakes
+  - Implemented in [docs/index.html](docs/index.html) and [docs/practice.html](docs/practice.html); configured by [docs/config.js](docs/config.js)
+- If wake-up takes unusually long (minutes), check Render:
+  - Dashboard → Logs and Events for restarts/crash loops
+  - Verify Health Check Path is /api/health in [render.yaml](render.yaml)
+  - Large cache load (two_digit_cache.json) can be heavy on cold boot; the health route warms it in a background thread to reduce latency
+- Optional: quick manual wake
+  - Bookmark https://YOUR-BACKEND.onrender.com/api/health and open it once before using the site after long idle periods
+- Optional: keep warm (not officially recommended)
+  - Use an external uptime monitor to hit /api/health periodically. Be mindful of Render free plan limits and terms.

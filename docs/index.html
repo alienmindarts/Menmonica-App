@@ -152,6 +152,11 @@
       <p id="errorText" class="text-sm"></p>
     </section>
 
+    <!-- Backend wake banner (Render free cold start) -->
+    <section id="backendWake" class="hidden mt-6 rounded-xl border border-sky-200 dark:border-sky-900/50 bg-sky-50 dark:bg-slate-800/40 p-4 text-sky-800 dark:text-sky-200">
+      <p id="backendWakeText" class="text-sm">Inicializando o servidor… isto pode demorar até ~50s no plano gratuito.</p>
+    </section>
+
     <!-- Partições -->
     <section id="partitionsSection" class="hidden mt-6">
       <h2 class="text-base font-semibold mb-3 text-slate-700 dark:text-slate-200">Partições e palavras</h2>
@@ -584,8 +589,41 @@
       }
     });
 
+    // Backend wake helper (Render free cold start)
+    async function wakeBackend(maxWaitMs = 60000) {
+      const API_BASE = (window.API_BASE || '').replace(/\/+$/,'');
+      if (!API_BASE) return; // same-origin/local dev
+      const start = Date.now();
+      const banner = qs('#backendWake');
+      const label = qs('#backendWakeText');
+      const show = (msg) => {
+        if (banner) banner.classList.remove('hidden');
+        if (label) label.textContent = msg;
+      };
+      const hide = () => { if (banner) banner.classList.add('hidden'); };
+      let attempt = 0;
+      while (Date.now() - start < maxWaitMs) {
+        attempt++;
+        try {
+          const c = new AbortController();
+          const t = setTimeout(() => c.abort(), 10000);
+          const res = await fetch(API_BASE + '/api/health', { signal: c.signal });
+          clearTimeout(t);
+          if (res.ok) { hide(); return; }
+        } catch (e) {
+          // ignore and retry
+        }
+        const secs = Math.min(50, Math.round((Date.now() - start)/1000));
+        show(`Inicializando o servidor… (${secs}s)`);
+        await new Promise(r => setTimeout(r, Math.min(8000, 1000 * attempt)));
+      }
+      show('Servidor demorando a iniciar. Tente novamente em alguns segundos.');
+    }
+
     // Estado inicial
     render();
+    // Fire-and-forget wake ping
+    try { wakeBackend(); } catch (_) {}
   </script>
 </body>
 </html>

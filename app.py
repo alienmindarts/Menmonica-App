@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, render_template
-from main import find_pairs_combinations, check_pair_in_cache, find_single_digit_words, word_to_major_number
+from main import find_pairs_combinations, check_pair_in_cache, find_single_digit_words, word_to_major_number, load_two_digit_cache
 from itertools import product
-import os, json, random
+import os, json, random, threading
 
 app = Flask(__name__, template_folder='templates')
 
@@ -27,8 +27,29 @@ def options_random_phrase():
     return ('', 204)
 
 # Simple health endpoint for Render health checks
+# Additionally, it triggers a non-blocking cache warm-up to reduce cold-start latency
 @app.get('/api/health')
 def health():
+    try:
+        if not app.config.get('WARMING', False):
+            app.config['WARMING'] = True
+            def warm():
+                try:
+                    # Warm two_digit_cache.json (heavy) and digit_cache.json (light) if present
+                    try:
+                        load_two_digit_cache()
+                    except Exception:
+                        pass
+                    try:
+                        with open('digit_cache.json', 'r', encoding='utf-8') as f:
+                            json.load(f)
+                    except Exception:
+                        pass
+                finally:
+                    app.config['WARMING'] = False
+            threading.Thread(target=warm, daemon=True).start()
+    except Exception:
+        app.config['WARMING'] = False
     return jsonify({'status': 'ok'})
 
 @app.get('/')

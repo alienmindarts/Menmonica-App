@@ -164,6 +164,11 @@
     <section class="mt-6 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-950/40 p-4 text-sm">
       <p class="text-slate-600 dark:text-slate-300">Dica: No Drill B, todas as palavras vêm da base de dados. Se a frase parecer difícil ou ambígua, gere uma nova frase ou ajuste “Palavras por frase” acima. Use a página Aprender para rever as regras.</p>
     </section>
+
+    <!-- Backend wake banner (Render free cold start) -->
+    <section id="backendWake" class="hidden mt-6 rounded-xl border border-sky-200 dark:border-sky-900/50 bg-sky-50 dark:bg-slate-800/40 p-4 text-sky-800 dark:text-sky-200">
+      <p id="backendWakeText" class="text-sm">Inicializando o servidor… isto pode demorar até ~50s no plano gratuito.</p>
+    </section>
   </main>
 
   <div id="toast" class="pointer-events-none fixed inset-x-0 bottom-6 z-50 mx-auto hidden w-fit rounded-lg bg-slate-800/90 px-4 py-2 text-sm text-white shadow-lg">Guardado!</div>
@@ -512,6 +517,27 @@
       }, 1000);
     }
 
+    // Backend wake helper (Render free cold start)
+    async function wakeBackend(maxWaitMs = 60000) {
+      const API_BASE = (window.API_BASE || '').replace(/\/+$/,'');
+      if (!API_BASE) return; // same-origin/local dev
+      const start = Date.now();
+      let attempt = 0;
+      while (Date.now() - start < maxWaitMs) {
+        attempt++;
+        try {
+          const c = new AbortController();
+          const t = setTimeout(() => c.abort(), 10000);
+          const res = await fetch(API_BASE + '/api/health', { signal: c.signal });
+          clearTimeout(t);
+          if (res.ok) return;
+        } catch (e) {
+          // ignore and retry
+        }
+        await new Promise(r => setTimeout(r, Math.min(8000, 1000 * attempt)));
+      }
+    }
+
     // Wire UI
     function initDrillA(){
       qs('#startA').addEventListener('click', startA);
@@ -527,6 +553,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       initSettings();
       initScores();
+      try { wakeBackend(); } catch (_) {}
       initDrillA();
       initDrillB();
     });
