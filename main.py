@@ -1,7 +1,5 @@
 import requests
 from functools import lru_cache
-import asyncio
-import aiohttp
 import os
 import json
 
