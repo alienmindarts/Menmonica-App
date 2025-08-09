@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="pt" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aprender – Sistema Fonético Major</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <script>
+    (function () {
+      try {
+        const ls = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (ls === 'dark' || (!ls && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (_) {}
+    })();
+  </script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              300: '#93c5fd',
+              400: '#60a5fa',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            },
+          },
+          boxShadow: {
+            soft: '0 2px 8px rgba(15, 23, 42, 0.06)',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: 0, transform: 'translateY(4px)' },
+              '100%': { opacity: 1, transform: 'translateY(0)' },
+            },
+          },
+          animation: {
+            fadeIn: 'fadeIn 300ms ease-out forwards',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    html, body { height: 100%; }
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; }
+  </style>
+</head>
+
+<body class="min-h-full bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
+  <header class="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/70 backdrop-blur border-b border-slate-200/60 dark:border-slate-800">
+    <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="h-8 w-8 rounded-md bg-brand-500/90 text-white flex items-center justify-center font-semibold shadow-soft">M</div>
+        <a href="/" class="text-lg sm:text-xl font-semibold">Sistema Fonético Major</a>
+      </div>
+      <div class="flex items-center gap-4">
+        <nav class="hidden sm:flex items-center gap-2">
+          <a href="/learn" class="text-sm text-brand-600 dark:text-brand-400 px-2 py-1 rounded-md bg-brand-50 dark:bg-brand-500/10">Aprender</a>
+          <a href="/practice" class="text-sm text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 px-2 py-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800">Praticar</a>
+        </nav>
+        <span class="hidden sm:inline text-sm text-slate-500 dark:text-slate-400">Tema</span>
+        <button id="themeToggle" class="inline-flex items-center gap-2 rounded-md border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" type="button" aria-label="Alternar tema claro/escuro">
+          <svg id="iconSun" class="h-4 w-4 hidden dark:inline text-yellow-400" viewBox="0 0 24 24" fill="currentColor"><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zm10.45 12.73l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM12 4V1h-0v3h0zm0 19v-3h0v3h0zM4 12H1v0h3v0zm19 0h-3v0h3 v0zM6.76 19.16l-1.42 1.42-1.79-1.8 1.41-1.41 1.8 1.79zM19.16 6.76l1.4-1.4 1.8 1.79-1.41 1.41-1.79-1.8zM12 6a6 6 0 100 12 6 6 0 000-12z"/></svg>
+          <svg id="iconMoon" class="h-4 w-4 dark:hidden text-slate-700" viewBox="0 0 24 24" fill="currentColor"><path d="M21.64 13a9 9 0 11-10.63-10.6A7 7 0 0021.64 13z"/></svg>
+          <span class="text-sm">Claro/Escuro</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-6">
+    <div class="mb-4 flex items-center justify-between">
+      <h1 class="text-xl sm:text-2xl font-semibold">Aprender o Sistema Major</h1>
+      <a href="/" class="text-sm text-brand-600 dark:text-brand-400 hover:underline">Voltar ao Conversor</a>
+    </div>
+
+    <div class="mb-4">
+      <div class="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+        <div id="progressBar" class="h-2 bg-brand-500 rounded-full transition-all" style="width:0%"></div>
+      </div>
+      <p id="progressLabel" class="mt-2 text-sm text-slate-600 dark:text-slate-300">Progresso: 0/8</p>
+    </div>
+
+    <section class="grid gap-4">
+      <details class="group rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 p-4" data-sec="s1">
+        <summary class="cursor-pointer list-none">
+          <div class="flex items-center justify-between">
+            <span class="font-semibold">1. O que é o Sistema Major</span>
+            <span class="text-xs rounded bg-slate-100 dark:bg-slate-800 px-2 py-0.5">Leitura ~1 min</span>
+          </div>
+        </summary>
+        <div class="mt-3 space-y-2 text-sm">
+          <p>O Sistema Major converte dígitos em sons consonantais. Depois, adiciona-se vogais para formar palavras fáceis de lembrar.</p>
+          <p>Use-o para memorizar números como datas, códigos e listas.</p>
+          <div class="mt-3 rounded-md border border-slate-200 dark:border-slate-800 p-3">
+            <p class="font-medium mb-2">Micro‑check</p>
+            <div class="space-y-1">
+              <button class="quiz" data-q="q1" data-a="A" data-correct="A">A) Dígitos viram sons, e sons viram palavras.</button>
+              <button class="quiz" data-q="q1" data-a="B">B) Dígitos viram cores.</button>
+              <button class="quiz" data-q="q1" data-a="C">C) Sons viram dígitos apenas pares.</button>
+            </div>
+            <p class="mt-2 text-xs text-slate-500">Resposta correta: A</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="group rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 p-4" data-sec="s2">
+        <summary class="cursor-pointer list-none">
+          <div class="flex items-center justify-between">
+            <span class="font-semibold">2. Mapeamento 0–9 (sons por dígito)</span>
+            <span class="text-xs rounded bg-slate-100 dark:bg-slate-800 px-2 py-0.5">Tabela rápida</span>
+          </div>
+        </summary>
+        <div class="mt-3 text-sm">
+          <ul class="grid gap-1 sm:grid-cols-2">
+            <li><b>0</b>: z, s, ss, ç, c(e/i)</li>
+            <li><b>1</b>: t, d</li>
+            <li><b>2</b>: n, nh</li>
+            <li><b>3</b>: m</li>
+            <li><b>4</b>: r, rr</li>
+            <li><b>5</b>: l, ll</li>
+            <li><b>6</b>: j, sc, x, ch, g(e/i)</li>
+            <li><b>7</b>: q, c, g(a/o/u), qu</li>
+            <li><b>8</b>: f, v</li>
+            <li><b>9</b>: p, b</li>
+          </ul>
+          <div class="mt-3 rounded-md border border-slate-200 dark:border-slate-800 p-3">
+            <p class="font-medium mb-2">Micro‑check</p>
+            <div class="space-y-1">
+              <button class="quiz" data-q="q2" data-a="A">A) 4 = l</button>
+              <button class="quiz" data-q="q2" data-a="B" data-correct="B">B) 4 = r/rr</button>
+              <button class="quiz" data-q="q2" data-a="C">C) 6 = p/b</button>
+            </div>
+            <p class="mt-2 text-xs text-slate-500">Resposta correta: B</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="group rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 p-4" data-sec="s3">
+        <summary class="cursor-pointer list-none">
+          <div class="flex items-center justify-between">
+            <span class="font-semibold">3. Regras e exceções úteis</span>
+            <span class="text-xs rounded bg-slate-100 dark:bg-slate-800 px-2 py-0.5">Atalhos</span>
+          </div>
+        </summary>
+        <div class="mt-3 text-sm space-y-2">
+          <p>Duplas como ss→0, ll→5, rr→4. "ch" → 6. "g" + e/i → 6; "g" + a/o/u → 7. "c" + e/i → 0.</p>
+          <div class="mt-2 rounded-md border border-slate-200 dark:border-slate-800 p-3">
+            <p class="font-medium mb-2">Micro‑check</p>
+            <div class="space-y-1">
+              <button class="quiz" data-q="q3" data-a="A">A) "ch" = 7</button>
+              <button class="quiz" data-q="q3" data-a="B" data-correct="B">B) "ch" = 6</button>
+              <button class="quiz" data-q="q3" data-a="C">C) "rr" = 5</button>
+            </div>
+            <p class="mt-2 text-xs text-slate-500">Resposta correta: B</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="group rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 p-4" data-sec="s4">
+        <summary class="cursor-pointer list-none">
+          <div class="flex items-center justify-between">
+            <span class="font-semibold">4. Exemplos 1–4 dígitos</span>
+            <span class="text-xs rounded bg-slate-100 dark:bg-slate-800 px-2 py-0.5">Aplicação</span>
+          </div>
+        </summary>
+        <div class="mt-3 text-sm space-y-2">
+          <ul class="list-disc pl-5">
+            <li>3 → m → "mãe"</li>
+            <li>32 → m + n → "mina"</li>
+            <li>327 → m + n + q → "mina que..." (adicione vogais livremente)</li>
+            <li>3279 → use o conversor e selecione palavras por bloco.</li>
+          </ul>
+          <div class="mt-2 rounded-md border border-slate-200 dark:border-slate-800 p-3">
+            <p class="font-medium mb-2">Micro‑check</p>
+            <div class="space-y-1">
+              <button class="quiz" data-q="q4" data-a="A">A) 3 = n</button>
+              <button class="quiz" data-q="q4" data-a="B" data-correct="B">B) 3 = m</button>
+              <button class="quiz" data-q="q4" data-a="C">C) 2 = m</button>
+            </div>
+            <p class="mt-2 text-xs text-slate-500">Resposta correta: B</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="group rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 p-4" data-sec="s5">
+        <summary class="cursor-pointer list-none">
+          <div class="flex items-center justify-between">
+            <span class="font-semibold">5. Frases memoráveis</span>
+            <span class="text-xs rounded bg-slate-100 dark:bg-slate-800 px-2 py-0.5">Dicas</span>
+          </div>
+        </summary>
+        <div class="mt-3 text-sm space-y-2">
+          <p>Prefira imagens vívidas, ação e ligação entre palavras (história curta).</p>
+          <p>Ritmo e aliteração ajudam a recordar.</p>
+          <div class="mt-2 rounded-md border border-slate-200 dark:border-slate-800 p-3">
+            <p class="font-medium mb-2">Micro‑check</p>
+            <div class="space-y-1">
+              <button class="quiz" data-q="q5" data-a="A" data-correct="A">A) Imagens vívidas ajudam a lembrar.</button>
+              <button class="quiz" data-q="q5" data-a="B">B) Frases devem ser sempre literais.</button>
+            </div>
+            <p class="mt-2 text-xs text-slate-500">Resposta correta: A</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="group rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 p-4" data-sec="s6">
+        <summary class="cursor-pointer list-none">
+          <div class="flex items-center justify-between">
+            <span class="font-semibold">6. Usando o conversor da app</span>
+            <span class="text-xs rounded bg-slate-100 dark:bg-slate-800 px-2 py-0.5">Workflow</span>
+          </div>
+        </summary>
+        <div class="mt-3 text-sm space-y-2">
+          <p>Digite o número, opcionalmente em blocos com espaços para controlar as partições.</p>
+          <p>Clique nas palavras para copiar, ou selecione por bloco para combinar no final.</p>
+          <div class="mt-2 rounded-md border border-slate-200 dark:border-slate-800 p-3">
+            <p class="font-medium mb-2">Micro‑check</p>
+            <div class="space-y-1">
+              <button class="quiz" data-q="q6" data-a="A" data-correct="A">A) Espaços separam blocos.</button>
+              <button class="quiz" data-q="q6" data-a="B">B) Espaços são removidos e ignorados sempre.</button>
+            </div>
+            <p class="mt-2 text-xs text-slate-500">Resposta correta: A</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="group rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 p-4" data-sec="s7">
+        <summary class="cursor-pointer list-none">
+          <div class="flex items-center justify-between">
+            <span class="font-semibold">7. Erros comuns</span>
+            <span class="text-xs rounded bg-slate-100 dark:bg-slate-800 px-2 py-0.5">Evite</span>
+          </div>
+        </summary>
+        <div class="mt-3 text-sm space-y-2">
+          <ul class="list-disc pl-5">
+            <li>Esquecer que "g" muda (6 vs 7) conforme a vogal seguinte.</li>
+            <li>Forçar palavras longas; prefira curtas e claras.</li>
+            <li>Não testar no conversor quando em dúvida.</li>
+          </ul>
+          <div class="mt-2 rounded-md border border-slate-200 dark:border-slate-800 p-3">
+            <p class="font-medium mb-2">Micro‑check</p>
+            <div class="space-y-1">
+              <button class="quiz" data-q="q7" data-a="A">A) "g" + e → 7</button>
+              <button class="quiz" data-q="q7" data-a="B" data-correct="B">B) "g" + e → 6</button>
+            </div>
+            <p class="mt-2 text-xs text-slate-500">Resposta correta: B</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="group rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 p-4" data-sec="s8">
+        <summary class="cursor-pointer list-none">
+          <div class="flex items-center justify-between">
+            <span class="font-semibold">8. Próximos passos</span>
+            <span class="text-xs rounded bg-slate-100 dark:bg-slate-800 px-2 py-0.5">Rotina</span>
+          </div>
+        </summary>
+        <div class="mt-3 text-sm space-y-2">
+          <p>Pratique 5 minutos por dia. Use o modo Praticar para consolidar.</p>
+          <p>Crie suas próprias palavras‑chave e repita em voz alta.</p>
+          <div class="mt-2 rounded-md border border-slate-200 dark:border-slate-800 p-3">
+            <p class="font-medium mb-2">Micro‑check</p>
+            <div class="space-y-1">
+              <button class="quiz" data-q="q8" data-a="A" data-correct="A">A) Prática curta e frequente funciona bem.</button>
+              <button class="quiz" data-q="q8" data-a="B">B) Praticar raramente por horas é melhor.</button>
+            </div>
+            <p class="mt-2 text-xs text-slate-500">Resposta correta: A</p>
+          </div>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <div id="toast" class="pointer-events-none fixed inset-x-0 bottom-6 z-50 mx-auto hidden w-fit rounded-lg bg-slate-800/90 px-4 py-2 text-sm text-white shadow-lg">Guardado!</div>
+
+  <script>
+    // Theme toggle
+    (function initThemeToggle() {
+      const btn = document.getElementById('themeToggle');
+      if (!btn) return;
+      const html = document.documentElement;
+      btn.addEventListener('click', () => {
+        const isDark = html.classList.toggle('dark');
+        try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch (_) {}
+        const sun = document.getElementById('iconSun');
+        const moon = document.getElementById('iconMoon');
+        if (sun && moon) {
+          sun.classList.toggle('hidden', !isDark);
+          moon.classList.toggle('hidden', isDark);
+        }
+      });
+    })();
+
+    const STORAGE_KEY = 'learn_progress_v1';
+    const qs = (s, r=document) => r.querySelector(s);
+    const qsa = (s, r=document) => Array.from(r.querySelectorAll(s));
+    function loadProgress() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
+    }
+    function saveProgress(p) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); } catch {}
+    }
+    function toast(msg='Guardado!') {
+      const t = qs('#toast');
+      t.textContent = msg;
+      t.classList.remove('hidden');
+      t.style.opacity = '0';
+      requestAnimationFrame(() => {
+        t.style.transition = 'opacity 150ms ease-out, transform 150ms ease-out';
+        t.style.opacity = '1';
+        t.style.transform = 'translateY(0)';
+      });
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateY(6px)';
+        setTimeout(() => t.classList.add('hidden'), 180);
+      }, 1000);
+    }
+    function updateProgressBar() {
+      const data = loadProgress();
+      const secs = ['s1','s2','s3','s4','s5','s6','s7','s8'];
+      const done = secs.filter(id => data[id] && data[id].completed).length;
+      const pct = Math.round((done / secs.length) * 100);
+      qs('#progressBar').style.width = pct + '%';
+      qs('#progressLabel').textContent = `Progresso: ${done}/8`;
+    }
+    function markCompleted(secId) {
+      const data = loadProgress();
+      data[secId] = data[secId] || {};
+      data[secId].completed = true;
+      saveProgress(data);
+      updateProgressBar();
+    }
+    function setQuizResult(qid, isCorrect) {
+      const data = loadProgress();
+      data.quizzes = data.quizzes || {};
+      data.quizzes[qid] = isCorrect ? 'correct' : 'wrong';
+      saveProgress(data);
+    }
+    function initQuizzes() {
+      qsa('button.quiz').forEach(btn => {
+        btn.classList.add('block','w-full','text-left','rounded-md','px-3','py-2','border','border-slate-200','dark:border-slate-700','bg-slate-50','dark:bg-slate-900/60','hover:bg-slate-100','dark:hover:bg-slate-800','transition');
+        btn.addEventListener('click', () => {
+          const correct = btn.dataset.correct === btn.dataset.a;
+          const qid = btn.dataset.q;
+          setQuizResult(qid, correct);
+          btn.classList.remove('border-slate-200','dark:border-slate-700','bg-slate-50','dark:bg-slate-900/60');
+          if (correct) {
+            btn.classList.add('border-emerald-300','bg-emerald-50','text-emerald-700','dark:border-emerald-500','dark:bg-emerald-500/10','dark:text-emerald-300');
+            toast('Correto!');
+          } else {
+            btn.classList.add('border-rose-300','bg-rose-50','text-rose-700','dark:border-rose-500','dark:bg-rose-500/10','dark:text-rose-300');
+            toast('Tente novamente');
+          }
+          const secEl = btn.closest('[data-sec]');
+          if (secEl) markCompleted(secEl.dataset.sec);
+        });
+      });
+    }
+    function restoreState() {
+      const data = loadProgress();
+      updateProgressBar();
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      initQuizzes();
+      restoreState();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="pt" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema Fonético Major – Menmónica</title>
+
+  <!-- Fonte: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Pré-aplicar tema para evitar FOUC -->
+  <script>
+    (function () {
+      try {
+        const ls = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (ls === 'dark' || (!ls && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (_) {}
+    })();
+  </script>
+
+  <!-- Tailwind via CDN (leve e rápido para prototipagem) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Configuração mínima do Tailwind (cores suaves)
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              300: '#93c5fd',
+              400: '#60a5fa',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            },
+          },
+          boxShadow: {
+            soft: '0 2px 8px rgba(15, 23, 42, 0.06)',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: 0, transform: 'translateY(4px)' },
+              '100%': { opacity: 1, transform: 'translateY(0)' },
+            },
+          },
+          animation: {
+            fadeIn: 'fadeIn 300ms ease-out forwards',
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Estilos adicionais mínimos -->
+  <style>
+    :root {
+      --ring: #3b82f6;
+    }
+    html, body { height: 100%; }
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; }
+  </style>
+</head>
+
+<body class="min-h-full bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
+  <!-- Header -->
+  <header class="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/70 backdrop-blur border-b border-slate-200/60 dark:border-slate-800">
+    <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="h-8 w-8 rounded-md bg-brand-500/90 text-white flex items-center justify-center font-semibold shadow-soft">M</div>
+        <h1 class="text-lg sm:text-xl font-semibold">Sistema Fonético Major</h1>
+      </div>
+      <div class="flex items-center gap-4">
+        <nav class="hidden sm:flex items-center gap-2">
+          <a href="/learn" class="text-sm text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 px-2 py-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800">Aprender</a>
+          <a href="/practice" class="text-sm text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 px-2 py-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800">Praticar</a>
+        </nav>
+        <span class="hidden sm:inline text-sm text-slate-500 dark:text-slate-400">Tema</span>
+        <button id="themeToggle" class="inline-flex items-center gap-2 rounded-md border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" type="button" aria-label="Alternar tema claro/escuro">
+          <svg id="iconSun" class="h-4 w-4 hidden dark:inline text-yellow-400" viewBox="0 0 24 24" fill="currentColor"><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zm10.45 12.73l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM12 4V1h-0v3h0zm0 19v-3h0v3h0zM4 12H1v0h3v0zm19 0h-3v0h3v0zM6.76 19.16l-1.42 1.42-1.79-1.8 1.41-1.41 1.8 1.79zM19.16 6.76l1.4-1.4 1.8 1.79-1.41 1.41-1.79-1.8zM12 6a6 6 0 100 12 6 6 0 000-12z"/></svg>
+          <svg id="iconMoon" class="h-4 w-4 dark:hidden text-slate-700" viewBox="0 0 24 24" fill="currentColor"><path d="M21.64 13a9 9 0 11-10.63-10.6A7 7 0 0021.64 13z"/></svg>
+          <span class="text-sm">Claro/Escuro</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="mx-auto max-w-6xl px-4 py-6">
+    <!-- Input card -->
+    <section class="rounded-xl bg-white dark:bg-slate-950/60 shadow-soft border border-slate-200/70 dark:border-slate-800 p-5 sm:p-6">
+      <div class="flex flex-col gap-4">
+        <label for="numberInput" class="text-sm font-medium text-slate-600 dark:text-slate-300">Insira um número</label>
+        <div class="relative">
+          <input
+            id="numberInput"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="Ex: 3279"
+            class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-4 py-3 text-lg outline-none ring-0 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition"
+            aria-describedby="inputHelp"
+          />
+          <div id="loadingSpinner" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-brand-500">
+            <svg class="h-5 w-5 animate-spin" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" class="opacity-25" stroke="currentColor" stroke-width="4" fill="none"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+          </div>
+        </div>
+        <p id="inputHelp" class="text-sm text-slate-500 dark:text-slate-400">
+          Resultados em tempo real. Pode separar o número em blocos com espaço. Clique em qualquer resultado para copiar.
+        </p>
+        <div class="flex flex-wrap items-center gap-3 pt-1">
+          <div class="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+            <span>Pré-visualização de combinações</span>
+            <input id="maxCombos" type="number" min="5" max="200" step="5" value="50"
+              class="w-20 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-2 py-1 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30" />
+          </div>
+          <div class="ml-auto flex items-center gap-3 text-sm">
+            <span id="resultCounter" class="rounded-md bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-slate-700 dark:text-slate-200">
+              0 resultados
+            </span>
+            <span id="comboCounter" class="rounded-md bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-slate-700 dark:text-slate-200">
+              0 combinações
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Empty state -->
+    <section id="emptyState" class="mt-6 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-950/40 p-8 text-center">
+      <p class="text-slate-600 dark:text-slate-300">
+        Insira um número para começar.
+      </p>
+    </section>
+
+    <!-- Mensagem de erro -->
+    <section id="errorState" class="hidden mt-6 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 p-4 text-rose-700 dark:text-rose-200">
+      <p id="errorText" class="text-sm"></p>
+    </section>
+
+    <!-- Partições -->
+    <section id="partitionsSection" class="hidden mt-6">
+      <h2 class="text-base font-semibold mb-3 text-slate-700 dark:text-slate-200">Partições e palavras</h2>
+      <div id="partitionsGrid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
+    </section>
+
+    <!-- Combinações pré-visualização -->
+    <section id="combosSection" class="hidden mt-8">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-base font-semibold text-slate-700 dark:text-slate-200">Combinações possíveis (pré-visualização)</h2>
+        <span class="text-sm text-slate-500 dark:text-slate-400">Limite configurável acima</span>
+      </div>
+      <div id="combosList" class="grid gap-2"></div>
+    </section>
+
+    <!-- Nenhuma mnemónica -->
+    <section id="noResults" class="hidden mt-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 p-6">
+      <p class="text-slate-600 dark:text-slate-300">Nenhuma mnemónica encontrada.</p>
+    </section>
+  </main>
+
+  <!-- Toast -->
+  <div id="toast" class="pointer-events-none fixed inset-x-0 bottom-6 z-50 mx-auto hidden w-fit rounded-lg bg-slate-800/90 px-4 py-2 text-sm text-white shadow-lg">
+    Copiado!
+  </div>
+
+  <!-- Script da UI -->
+  <script>
+    // Utilidades
+    const qs = (sel, root = document) => root.querySelector(sel);
+    const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+    const $$ = (tag, props = {}, children = []) => {
+      const el = document.createElement(tag);
+      Object.entries(props).forEach(([k, v]) => {
+        if (k === 'class') el.className = v;
+        else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
+        else if (k === 'dataset') Object.entries(v).forEach(([dk, dv]) => el.dataset[dk] = dv);
+        else el.setAttribute(k, v);
+      });
+      (Array.isArray(children) ? children : [children]).filter(Boolean).forEach(c => {
+        if (typeof c === 'string') el.appendChild(document.createTextNode(c));
+        else el.appendChild(c);
+      });
+      return el;
+    };
+    const debounce = (fn, delay = 250) => {
+      let t;
+      return (...args) => {
+        clearTimeout(t);
+        t = setTimeout(() => fn(...args), delay);
+      };
+    };
+    const showToast = (msg = 'Copiado!') => {
+      const t = qs('#toast');
+      t.textContent = msg;
+      t.classList.remove('hidden');
+      t.style.opacity = '0';
+      requestAnimationFrame(() => {
+        t.style.transition = 'opacity 150ms ease-out, transform 150ms ease-out';
+        t.style.opacity = '1';
+        t.style.transform = 'translateY(0)';
+      });
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateY(6px)';
+        setTimeout(() => t.classList.add('hidden'), 180);
+      }, 1200);
+    };
+    const copyText = async (text) => {
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('Copiado!');
+      } catch {
+        // Fallback
+        const ta = $$('textarea', { class: 'sr-only' }, text);
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          showToast('Copiado!');
+        } finally {
+          document.body.removeChild(ta);
+        }
+      }
+    };
+
+    // Tema claro/escuro
+    (function initThemeToggle() {
+      const btn = qs('#themeToggle');
+      const html = document.documentElement;
+      btn.addEventListener('click', () => {
+        const isDark = html.classList.toggle('dark');
+        try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch (_) {}
+        // Alterna ícones
+        qs('#iconSun').classList.toggle('hidden', !isDark);
+        qs('#iconMoon').classList.toggle('hidden', isDark);
+      });
+    })();
+
+    // Estado UI
+    let state = {
+      input: '',
+      partitions: [],
+      totalResults: 0,
+      combosPreview: [],
+      combosPreviewCount: 0,
+      loading: false,
+      error: '',
+      selected: {}
+    };
+
+    // Controlador para cancelar fetches antigos e sequenciador
+    let currentController = null;
+    let latestSeq = 0;
+
+    // Elementos
+    const elInput = qs('#numberInput');
+    const elSpinner = qs('#loadingSpinner');
+    const elEmpty = qs('#emptyState');
+    const elError = qs('#errorState');
+    const elErrorText = qs('#errorText');
+    const elPartitionsSection = qs('#partitionsSection');
+    const elPartitionsGrid = qs('#partitionsGrid');
+    const elCombosSection = qs('#combosSection');
+    const elCombosList = qs('#combosList');
+    const elNoResults = qs('#noResults');
+    const elResultCounter = qs('#resultCounter');
+    const elComboCounter = qs('#comboCounter');
+    const elMaxCombos = qs('#maxCombos');
+
+    function setLoading(on) {
+      state.loading = on;
+      elSpinner.classList.toggle('hidden', !on);
+    }
+
+    function setError(msg = '') {
+      state.error = msg;
+      elError.classList.toggle('hidden', !msg);
+      elErrorText.textContent = msg || '';
+    }
+
+    function sanitizeDigitsSpaces(str) {
+      return (str || '')
+        .replace(/[^\d\s]+/g, '')
+        .replace(/\s+/g, ' ')
+        .trimStart();
+    }
+    function parseBlocks(str) {
+      const norm = (str || '').replace(/[^\d\s]+/g, '').replace(/\s+/g, ' ').trim();
+      return norm ? norm.split(' ').filter(Boolean) : [];
+    }
+
+    function renderCounters() {
+      const r = state.totalResults || 0;
+      const c = state.combosPreviewCount || 0;
+      elResultCounter.textContent = `${r} ${r === 1 ? 'resultado' : 'resultados'}`;
+      elComboCounter.textContent = `${c} ${c === 1 ? 'combinação' : 'combinações'}`;
+    }
+
+    function renderEmptyState() {
+      const hasInput = !!state.input;
+      elEmpty.classList.toggle('hidden', hasInput);
+    }
+
+    function renderNoResults() {
+      const show = state.input && !state.loading && !state.error && state.totalResults === 0;
+      elNoResults.classList.toggle('hidden', !show);
+    }
+
+    function renderPartitions() {
+      const show = state.partitions && state.partitions.length > 0;
+      elPartitionsSection.classList.toggle('hidden', !show);
+      elPartitionsGrid.innerHTML = '';
+      if (!show) return;
+
+      state.partitions.forEach((p, idx) => {
+        const card = $$('div', {
+          class: 'animate-fadeIn rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 p-4 shadow-soft'
+        });
+
+        const head = $$('div', { class: 'mb-3 flex items-center justify-between' }, [
+          $$('div', { class: 'text-sm text-slate-500 dark:text-slate-400' }, `Bloco`),
+          $$('div', { class: 'text-xs rounded bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-slate-700 dark:text-slate-200' }, `#${idx + 1}`)
+        ]);
+        const seq = $$('div', { class: 'mb-3 text-xl font-semibold tracking-tight text-brand-600 dark:text-brand-400' }, p.sequence);
+        const chips = $$('div', { class: 'flex flex-wrap gap-2 max-h-44 overflow-auto pr-1' });
+
+        // Ordenar para mostrar a palavra selecionada primeiro (se existir)
+        const wordsList = Array.isArray(p.words) ? [...p.words] : [];
+        const selectedWord = state.selected ? state.selected[idx] : undefined;
+        if (selectedWord) {
+          wordsList.sort((a, b) => {
+            if (a === selectedWord && b !== selectedWord) return -1;
+            if (b === selectedWord && a !== selectedWord) return 1;
+            return a.localeCompare(b, 'pt', { sensitivity: 'base' });
+          });
+        }
+
+        if (wordsList.length === 0) {
+          chips.appendChild(
+            $$('div', { class: 'text-xs text-slate-500 dark:text-slate-400 italic' }, 'Sem palavras para este bloco')
+          );
+        }
+
+        wordsList.forEach(w => {
+          const isSel = (state.selected && state.selected[idx] === w);
+          const baseCls = 'rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition';
+          const selCls = ' border-brand-300 bg-brand-50 text-brand-700 dark:border-brand-500 dark:bg-brand-500/10 dark:text-brand-300';
+          const chip = $$('button', {
+            class: baseCls + (isSel ? selCls : ''),
+            title: 'Copiar',
+            type: 'button'
+          }, w);
+          chip.addEventListener('click', () => {
+            copyText(w);
+            // alternar seleção do bloco
+            if (state.selected && state.selected[idx] === w) {
+              delete state.selected[idx];
+            } else {
+              state.selected = { ...(state.selected || {}), [idx]: w };
+            }
+            recomputeCombos();
+            render();
+          });
+          chips.appendChild(chip);
+        });
+
+        card.appendChild(head);
+        card.appendChild(seq);
+        card.appendChild(chips);
+        elPartitionsGrid.appendChild(card);
+      });
+    }
+
+    function renderCombos() {
+      const show = state.combosPreview && state.combosPreview.length > 0;
+      elCombosSection.classList.toggle('hidden', !show);
+      elCombosList.innerHTML = '';
+      if (!show) return;
+
+      state.combosPreview.forEach(text => {
+        const row = $$('div', {
+          class: 'animate-fadeIn group flex items-center justify-between rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 px-3 py-2'
+        });
+        const label = $$('div', { class: 'text-sm text-slate-700 dark:text-slate-200' }, text);
+        const btn = $$('button', {
+          class: 'rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 px-2 py-1 text-xs text-slate-700 dark:text-slate-200 opacity-0 group-hover:opacity-100 transition',
+          type: 'button'
+        }, 'Copiar');
+
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          copyText(text);
+        });
+        row.addEventListener('click', () => copyText(text));
+
+        row.appendChild(label);
+        row.appendChild(btn);
+        elCombosList.appendChild(row);
+      });
+    }
+
+    function render() {
+      renderCounters();
+      renderEmptyState();
+      renderNoResults();
+      renderPartitions();
+      renderCombos();
+    }
+
+    function reconcileSelection() {
+      const sel = state.selected || {};
+      const valid = {};
+      state.partitions.forEach((p, idx) => {
+        const w = sel[idx];
+        if (w && Array.isArray(p.words) && p.words.includes(w)) {
+          valid[idx] = w;
+        }
+      });
+      state.selected = valid;
+    }
+
+    function computeCombos(partitions, max = 50, selected = {}) {
+      const results = [];
+      const n = partitions.length;
+      if (!n) return results;
+
+      function backtrack(i, acc) {
+        if (results.length >= max) return;
+        if (i === n) {
+          results.push(acc.join(' '));
+          return;
+        }
+        const opts = partitions[i].words || [];
+        if (!opts.length) return;
+        const sel = selected[i];
+        if (sel) {
+          if (opts.includes(sel)) {
+            backtrack(i + 1, acc.concat(sel));
+          }
+          return;
+        }
+        for (const w of opts) {
+          if (results.length >= max) break;
+          backtrack(i + 1, acc.concat(w));
+        }
+      }
+
+      backtrack(0, []);
+      return results;
+    }
+
+    function recomputeCombos() {
+      const maxC = parseInt(elMaxCombos.value || '50', 10);
+      const cap = isNaN(maxC) ? 50 : maxC;
+      const combos = computeCombos(state.partitions || [], cap, state.selected || {});
+      state.combosPreview = combos;
+      state.combosPreviewCount = combos.length;
+    }
+
+    async function fetchConvert(inputStr, maxCombos = 50) {
+      setError('');
+      const mySeq = ++latestSeq;
+      // Cancelar requisição anterior (se existir)
+      if (currentController) {
+        try { currentController.abort(); } catch (_) {}
+      }
+      currentController = new AbortController();
+      setLoading(true);
+      try {
+        const norm = sanitizeDigitsSpaces(inputStr || '');
+        const blocks = parseBlocks(norm);
+        const payload = {
+          number: norm.replace(/\s/g, ''),
+          maxCombos
+        };
+        if (blocks.length) payload.blocks = blocks;
+
+        const res = await fetch('/api/convert', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: currentController.signal,
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || 'Erro desconhecido');
+        }
+        const data = await res.json();
+
+        // Ignorar respostas "obsoletas"
+        if (mySeq !== latestSeq) return;
+
+        state = {
+          ...state,
+          input: norm,
+          partitions: data.partitions || [],
+          totalResults: data.totalResults || 0,
+        };
+
+        // Ajustar seleções e recomputar combinações conforme necessário
+        reconcileSelection();
+        const hasSelection = state.selected && Object.keys(state.selected).length > 0;
+        if (hasSelection) {
+          const cap = parseInt(maxCombos, 10);
+          const limit = isNaN(cap) ? 50 : cap;
+          const combos = computeCombos(state.partitions, limit, state.selected);
+          state.combosPreview = combos;
+          state.combosPreviewCount = combos.length;
+        } else {
+          state.combosPreview = data.combosPreview || [];
+          state.combosPreviewCount = data.combosPreviewCount || 0;
+        }
+      } catch (err) {
+        if (err && err.name === 'AbortError') {
+          return; // requisição anterior cancelada
+        }
+        setError(err.message || 'Falha ao obter resultados.');
+        state = {
+          ...state,
+          partitions: [],
+          totalResults: 0,
+          combosPreview: [],
+          combosPreviewCount: 0,
+        };
+      } finally {
+        if (mySeq === latestSeq) {
+          setLoading(false);
+          render();
+        }
+      }
+    }
+
+    // Eventos
+    const onInput = debounce(() => {
+      const raw = elInput.value;
+      const cleaned = sanitizeDigitsSpaces(raw);
+      if (raw !== cleaned) {
+        elInput.value = cleaned;
+      }
+      if (!cleaned.trim()) {
+        state = {
+          ...state,
+          input: '',
+          partitions: [],
+          totalResults: 0,
+          combosPreview: [],
+          combosPreviewCount: 0,
+        };
+        // limpar seleções quando o input é esvaziado
+        state.selected = {};
+        render();
+        return;
+      }
+      const maxC = parseInt(elMaxCombos.value || '50', 10);
+      fetchConvert(cleaned, isNaN(maxC) ? 50 : maxC);
+    }, 250);
+
+    elInput.addEventListener('input', onInput);
+    elMaxCombos.addEventListener('change', () => {
+      const cleaned = sanitizeDigitsSpaces(elInput.value);
+      elInput.value = cleaned;
+      const hasSelection = state.selected && Object.keys(state.selected).length > 0;
+      if (hasSelection && state.partitions.length) {
+        recomputeCombos();
+        render();
+      } else if (cleaned.trim()) {
+        onInput();
+      }
+    });
+
+    // Estado inicial
+    render();
+  </script>
+</body>
+</html>

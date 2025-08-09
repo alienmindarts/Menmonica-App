@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>404</title>
+  <meta http-equiv="refresh" content="3; url=./index.html" />
+  <meta name="robots" content="noindex" />
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; padding: 2rem; line-height: 1.5; }
+    .muted { color: #64748b; }
+    code { background: #f1f5f9; padding: 0 .25rem; border-radius: .25rem; }
+  </style>
+</head>
+<body>
+  <h1>404</h1>
+  <p>Redirecionando… Se não for redirecionado automaticamente, <a href="./index.html">clique aqui</a>.</p>
+  <p class="muted">Dica: Use links relativos como <code>learn.html</code> e <code>practice.html</code> em GitHub Pages.</p>
+  <script>
+    (function() {
+      try {
+        var p = (location.pathname || '').toLowerCase();
+        // Try to handle deep-links like /learn or /practice
+        if (p.endsWith('/learn') || p.endsWith('/learn/')) {
+          location.replace('./learn.html');
+          return;
+        }
+        if (p.endsWith('/practice') || p.endsWith('/practice/')) {
+          location.replace('./practice.html');
+          return;
+        }
+        // Fallback to home
+        location.replace('./index.html');
+      } catch (e) {
+        // meta refresh fallback
+      }
+    })();
+  </script>
+</body>
+</html>

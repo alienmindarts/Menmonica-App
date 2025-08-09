@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="pt" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Praticar – Sistema Fonético Major</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <script>
+    (function () {
+      try {
+        const ls = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (ls === 'dark' || (!ls && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (_) {}
+    })();
+  </script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              300: '#93c5fd',
+              400: '#60a5fa',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            },
+          },
+          boxShadow: {
+            soft: '0 2px 8px rgba(15, 23, 42, 0.06)',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: 0, transform: 'translateY(4px)' },
+              '100%': { opacity: 1, transform: 'translateY(0)' },
+            },
+          },
+          animation: {
+            fadeIn: 'fadeIn 300ms ease-out forwards',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    html, body { height:100%; }
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; }
+  </style>
+</head>
+
+<body class="min-h-full bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
+  <header class="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/70 backdrop-blur border-b border-slate-200/60 dark:border-slate-800">
+    <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="h-8 w-8 rounded-md bg-brand-500/90 text-white flex items-center justify-center font-semibold shadow-soft">M</div>
+        <a href="/" class="text-lg sm:text-xl font-semibold">Sistema Fonético Major</a>
+      </div>
+      <div class="flex items-center gap-4">
+        <nav class="hidden sm:flex items-center gap-2">
+          <a href="/learn" class="text-sm text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 px-2 py-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800">Aprender</a>
+          <a href="/practice" class="text-sm text-brand-600 dark:text-brand-400 px-2 py-1 rounded-md bg-brand-50 dark:bg-brand-500/10">Praticar</a>
+        </nav>
+        <span class="hidden sm:inline text-sm text-slate-500 dark:text-slate-400">Tema</span>
+        <button id="themeToggle" class="inline-flex items-center gap-2 rounded-md border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" type="button" aria-label="Alternar tema claro/escuro">
+          <svg id="iconSun" class="h-4 w-4 hidden dark:inline text-yellow-400" viewBox="0 0 24 24" fill="currentColor"><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zm10.45 12.73l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM12 4V1h-0v3h0zm0 19v-3h0v3h0zM4 12H1v0h3v0zm19 0h-3v0h3v0zM6.76 19.16l-1.42 1.42-1.79-1.8 1.41-1.41 1.8 1.79zM19.16 6.76l1.4-1.4 1.8 1.79-1.41 1.41-1.79-1.8zM12 6a6 6 0 100 12 6 6 0 000-12z"/></svg>
+          <svg id="iconMoon" class="h-4 w-4 dark:hidden text-slate-700" viewBox="0 0 24 24" fill="currentColor"><path d="M21.64 13a9 9 0 11-10.63-10.6A7 7 0 0021.64 13z"/></svg>
+          <span class="text-sm">Claro/Escuro</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-6">
+    <div class="mb-4 flex items-center justify-between">
+      <h1 class="text-xl sm:text-2xl font-semibold">Praticar</h1>
+      <a href="/" class="text-sm text-brand-600 dark:text-brand-400 hover:underline">Voltar ao Conversor</a>
+    </div>
+
+    <section class="mb-6 rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200/70 dark:border-slate-800 p-4">
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-slate-600 dark:text-slate-300">Dificuldade</span>
+          <select id="difficulty" class="rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-2 py-1 text-sm">
+            <option value="mixed">Misto</option>
+            <option value="digit_to_sound">Dígito → Som</option>
+            <option value="sound_to_digit">Som → Dígito</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-slate-600 dark:text-slate-300">Tempo (Flashcards)</span>
+          <input id="timeA" type="number" min="20" max="300" step="10" value="60" class="w-20 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-2 py-1 text-sm" />
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-slate-600 dark:text-slate-300">Palavras por frase</span>
+          <input id="lenB" type="number" min="3" max="6" step="1" value="4" class="w-20 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-2 py-1 text-sm" />
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-slate-600 dark:text-slate-300">Tempo (Palavra/Frase→Dígitos)</span>
+          <input id="timeB" type="number" min="30" max="300" step="10" value="90" class="w-20 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-2 py-1 text-sm" />
+        </div>
+        <button id="saveSettings" class="ml-auto rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">Guardar definições</button>
+      </div>
+    </section>
+
+    <section class="grid gap-6 lg:grid-cols-2">
+      <div class="rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200/70 dark:border-slate-800 p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-base font-semibold">Drill A — Flashcards (Mapeamento)</h2>
+          <div class="flex items-center gap-2 text-sm">
+            <span id="bestA" class="rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5">Melhor: 0</span>
+            <span id="timerA" class="rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5">60s</span>
+          </div>
+        </div>
+        <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Responda o máximo possível antes do tempo acabar.</p>
+        <div id="cardA" class="rounded-lg border border-slate-200 dark:border-slate-800 p-4">
+          <div id="promptA" class="text-2xl font-semibold mb-3">—</div>
+          <div id="optsA" class="grid sm:grid-cols-2 gap-2"></div>
+          <div class="mt-3 flex items-center gap-2">
+            <button id="startA" class="rounded-md border border-slate-200 dark:border-slate-700 bg-brand-600 text-white px-3 py-1.5 text-sm hover:bg-brand-700">Iniciar</button>
+            <button id="skipA" class="rounded-md border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">Saltar</button>
+            <span id="scoreA" class="ml-auto text-sm">Pontuação: 0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200/70 dark:border-slate-800 p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-base font-semibold">Drill B — Palavra/Frase → Dígitos</h2>
+          <div class="flex items-center gap-2 text-sm">
+            <span id="bestB" class="rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5">Melhor tempo: —</span>
+            <span id="timerB" class="rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5">90s</span>
+          </div>
+        </div>
+        <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Escreva os dígitos correspondentes a cada palavra.</p>
+        <div id="cardB" class="rounded-lg border border-slate-200 dark:border-slate-800 p-4">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="text-sm">Frase:</div>
+            <div id="phraseWords" class="flex flex-wrap gap-2"></div>
+            <button id="newPhraseB" class="ml-auto rounded-md border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">Nova frase</button>
+            <button id="startB" class="rounded-md border border-slate-200 dark:border-slate-700 bg-brand-600 text-white px-3 py-1.5 text-sm hover:bg-brand-700">Iniciar</button>
+          </div>
+          <div id="inputsB" class="grid gap-2"></div>
+          <div id="resultB" class="mt-3 hidden rounded-md border border-slate-200 dark:border-slate-800 p-3"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-6 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-950/40 p-4 text-sm">
+      <p class="text-slate-600 dark:text-slate-300">Dica: No Drill B, todas as palavras vêm da base de dados. Se a frase parecer difícil ou ambígua, gere uma nova frase ou ajuste “Palavras por frase” acima. Use a página Aprender para rever as regras.</p>
+    </section>
+  </main>
+
+  <div id="toast" class="pointer-events-none fixed inset-x-0 bottom-6 z-50 mx-auto hidden w-fit rounded-lg bg-slate-800/90 px-4 py-2 text-sm text-white shadow-lg">Guardado!</div>
+
+  <script>
+    // Utilities
+    const qs = (s, r=document) => r.querySelector(s);
+    const qsa = (s, r=document) => Array.from(r.querySelectorAll(s));
+    const $$ = (tag, props={}, children=[]) => {
+      const el = document.createElement(tag);
+      Object.entries(props).forEach(([k,v]) => {
+        if (k === 'class') el.className = v;
+        else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
+        else if (k === 'dataset') Object.entries(v).forEach(([dk,dv]) => el.dataset[dk]=dv);
+        else el.setAttribute(k, v);
+      });
+      (Array.isArray(children)?children:[children]).filter(Boolean).forEach(c => el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c));
+      return el;
+    };
+    function toast(msg='Guardado!') {
+      const t = qs('#toast');
+      t.textContent = msg;
+      t.classList.remove('hidden');
+      t.style.opacity = '0';
+      requestAnimationFrame(() => {
+        t.style.transition = 'opacity 150ms ease-out, transform 150ms ease-out';
+        t.style.opacity = '1';
+        t.style.transform = 'translateY(0)';
+      });
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateY(6px)';
+        setTimeout(() => t.classList.add('hidden'), 180);
+      }, 1000);
+    }
+
+    // Theme toggle
+    (function initThemeToggle(){
+      const btn = qs('#themeToggle'); if (!btn) return;
+      const html = document.documentElement;
+      btn.addEventListener('click', () => {
+        const isDark = html.classList.toggle('dark');
+        try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch {}
+        const sun = qs('#iconSun'), moon = qs('#iconMoon');
+        if (sun && moon) { sun.classList.toggle('hidden', !isDark); moon.classList.toggle('hidden', isDark); }
+      });
+    })();
+
+    // Storage
+    const SETTINGS_KEY = 'practice_settings_v1';
+    const SCORES_KEY = 'practice_scores_v1';
+    function loadJSON(k, def){ try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch { return def; } }
+    function saveJSON(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+
+    // Mapping dataset (alinhado com main.py)
+    const DIGIT_TO_SOUNDS = {
+      '0': ['z','s','ss','ç','c(e/i)'],
+      '1': ['t','d'],
+      '2': ['n','nh'],
+      '3': ['m'],
+      '4': ['r','rr'],
+      '5': ['l','ll'],
+      '6': ['j','sc','x','ch','g(e/i)'],
+      '7': ['q','g(a/o/u)','qu'],
+      '8': ['f','v'],
+      '9': ['p','b'],
+    };
+    const SOUND_TO_DIGIT = {};
+    Object.entries(DIGIT_TO_SOUNDS).forEach(([d, arr]) => arr.forEach(s => SOUND_TO_DIGIT[s] = d));
+
+    // Settings init
+    function applySettingsToUI(st){
+      qs('#difficulty').value = st.drillA.mode;
+      qs('#timeA').value = st.drillA.timeLimit;
+      qs('#lenB').value = st.drillB.length;
+      qs('#timeB').value = st.drillB.timeLimit;
+      qs('#timerA').textContent = st.drillA.timeLimit + 's';
+      qs('#timerB').textContent = st.drillB.timeLimit + 's';
+    }
+    function initSettings(){
+      let st = loadJSON(SETTINGS_KEY, null);
+      if (!st) {
+        st = { drillA: { mode:'mixed', timeLimit:60 }, drillB: { length:4, timeLimit:90 } };
+        saveJSON(SETTINGS_KEY, st);
+      }
+      applySettingsToUI(st);
+      qs('#saveSettings').addEventListener('click', () => {
+        const ns = {
+          drillA: { mode: qs('#difficulty').value, timeLimit: parseInt(qs('#timeA').value||'60',10) || 60 },
+          drillB: { length: Math.min(6, Math.max(3, parseInt(qs('#lenB').value||'4',10)||4)),
+                    timeLimit: parseInt(qs('#timeB').value||'90',10) || 90 }
+        };
+        saveJSON(SETTINGS_KEY, ns);
+        applySettingsToUI(ns);
+        toast('Definições guardadas');
+      });
+    }
+
+    // Scores init
+    function initScores(){
+      const sc = loadJSON(SCORES_KEY, { drillA:{best:0}, drillB:{bestTimeMs:null} });
+      qs('#bestA').textContent = 'Melhor: ' + (sc.drillA.best||0);
+      qs('#bestB').textContent = 'Melhor tempo: ' + (sc.drillB.bestTimeMs ? (Math.round(sc.drillB.bestTimeMs/100)/10)+'s' : '—');
+    }
+    function setBestA(score){
+      const sc = loadJSON(SCORES_KEY, { drillA:{best:0}, drillB:{bestTimeMs:null} });
+      if (score > (sc.drillA.best||0)) {
+        sc.drillA.best = score;
+        saveJSON(SCORES_KEY, sc);
+        initScores();
+      }
+    }
+    function setBestB(ms){
+      const sc = loadJSON(SCORES_KEY, { drillA:{best:0}, drillB:{bestTimeMs:null} });
+      if (!sc.drillB.bestTimeMs || ms < sc.drillB.bestTimeMs) {
+        sc.drillB.bestTimeMs = ms;
+        saveJSON(SCORES_KEY, sc);
+        initScores();
+      }
+    }
+
+    // Drill A logic
+    let A_state = { running:false, score:0, timeLeft:60, timer:null, current:null };
+    function randomChoice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+    function buildOptionsDigitToSound(digit){
+      const correct = randomChoice(DIGIT_TO_SOUNDS[digit]);
+      const pool = Object.values(DIGIT_TO_SOUNDS).flat().filter(x => !DIGIT_TO_SOUNDS[digit].includes(x));
+      const opts = [correct];
+      while (opts.length < 4 && pool.length) {
+        const i = Math.floor(Math.random()*pool.length);
+        opts.push(pool.splice(i,1)[0]);
+      }
+      return shuffle(opts);
+    }
+    function buildOptionsSoundToDigit(sound){
+      const correct = SOUND_TO_DIGIT[sound];
+      const digits = Object.keys(DIGIT_TO_SOUNDS).filter(d => d !== correct);
+      const opts = [correct];
+      while (opts.length < 4 && digits.length) {
+        const i = Math.floor(Math.random()*digits.length);
+        opts.push(digits.splice(i,1)[0]);
+      }
+      return shuffle(opts);
+    }
+    function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+    function nextQuestionA(){
+      const st = loadJSON(SETTINGS_KEY, { drillA:{mode:'mixed'} });
+      const mode = st.drillA.mode || 'mixed';
+      let prompt, correct, opts;
+      if (mode === 'digit_to_sound' || (mode === 'mixed' && Math.random() < 0.5)) {
+        const digit = randomChoice(Object.keys(DIGIT_TO_SOUNDS));
+        prompt = 'Dígito → Som: ' + digit;
+        const options = buildOptionsDigitToSound(digit);
+        correct = DIGIT_TO_SOUNDS[digit]; // an array; treat as contains
+        opts = options.map(text => ({text, value:text}));
+      } else {
+        const sound = randomChoice(Object.values(DIGIT_TO_SOUNDS).flat());
+        prompt = 'Som → Dígito: ' + sound;
+        const options = buildOptionsSoundToDigit(sound);
+        correct = SOUND_TO_DIGIT[sound];
+        opts = options.map(text => ({text, value:text}));
+      }
+      A_state.current = { prompt, correct };
+      renderQuestionA(prompt, opts);
+    }
+    function renderQuestionA(prompt, opts){
+      qs('#promptA').textContent = prompt;
+      const box = qs('#optsA'); box.innerHTML = '';
+      opts.forEach(o => {
+        const btn = $$('button', { class:'rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition' }, o.text);
+        btn.addEventListener('click', () => {
+          const cur = A_state.current;
+          let ok = false;
+          if (Array.isArray(cur.correct)) ok = cur.correct.includes(o.value);
+          else ok = (o.value === cur.correct);
+          if (ok) {
+            A_state.score += 1;
+            qs('#scoreA').textContent = 'Pontuação: ' + A_state.score;
+          }
+          nextQuestionA();
+        });
+        box.appendChild(btn);
+      });
+    }
+    function startA(){
+      const st = loadJSON(SETTINGS_KEY, { drillA:{timeLimit:60} });
+      A_state.running = true;
+      A_state.score = 0;
+      A_state.timeLeft = st.drillA.timeLimit || 60;
+      qs('#scoreA').textContent = 'Pontuação: 0';
+      qs('#timerA').textContent = A_state.timeLeft + 's';
+      clearInterval(A_state.timer);
+      A_state.timer = setInterval(() => {
+        if (!A_state.running) return;
+        A_state.timeLeft -= 1;
+        qs('#timerA').textContent = A_state.timeLeft + 's';
+        if (A_state.timeLeft <= 0) {
+          clearInterval(A_state.timer);
+          A_state.running = false;
+          setBestA(A_state.score);
+          toast('Tempo!');
+        }
+      }, 1000);
+      nextQuestionA();
+    }
+
+    // Drill B logic — Palavra/Frase → Dígitos
+    let B_state = { running:false, timeLeft:90, timer:null, tStart:null, phrase:[], solved:{} };
+
+    // Replica lógica do Python em JS
+    function wordToMajorNumber(word){
+      let number = "";
+      const w = (word || "").toLowerCase();
+      let i = 0;
+      while (i < w.length) {
+        if (i + 1 < w.length && w[i] === "s" && w[i+1] === "s") {
+          number += "0"; i += 2;
+        } else if (i + 1 < w.length && w[i] === "l" && w[i+1] === "l") {
+          number += "5"; i += 2;
+        } else if (i + 1 < w.length && w[i] === "r" && w[i+1] === "r") {
+          number += "4"; i += 2;
+        } else if (i + 1 < w.length && w[i] === "c" && w[i+1] === "h") {
+          number += "6"; i += 2;
+        } else if (w[i] === "c" && (i + 1 < w.length) && ("ei".includes(w[i+1]))) {
+          number += "0"; i += 2;
+        } else if (w[i] === "g" && (i + 1 < w.length) && ("ei".includes(w[i+1]))) {
+          number += "6"; i += 2;
+        } else if (w[i] === "g" && (i + 1 < w.length) && ("aou".includes(w[i+1]))) {
+          number += "7"; i += 2;
+        } else {
+          const ch = w[i];
+          let mapped = null;
+          if (ch === "z" || ch === "s" || ch === "ç") mapped = "0";
+          else if (ch === "t" || ch === "d") mapped = "1";
+          else if (ch === "n") mapped = "2";
+          else if (ch === "m") mapped = "3";
+          else if (ch === "r") mapped = "4";
+          else if (ch === "l") mapped = "5";
+          else if (ch === "j" || ch === "x") mapped = "6";
+          else if (ch === "q" || ch === "c" || ch === "g") mapped = "7";
+          else if (ch === "f" || ch === "v") mapped = "8";
+          else if (ch === "p" || ch === "b") mapped = "9";
+          if (mapped) number += mapped;
+          i += 1;
+        }
+      }
+      return number;
+    }
+
+    async function fetchRandomPhrase(){
+      const st = loadJSON(SETTINGS_KEY, { drillB:{length:2} });
+      const count = Math.min(6, Math.max(1, st.drillB.length || 2));
+      const res = await fetch(`/api/random_phrase?words=${count}`);
+      if (!res.ok) throw new Error('Falha ao obter frase');
+      const data = await res.json();
+      const words = Array.isArray(data.words) ? data.words : [];
+      return words;
+    }
+
+    function renderPhraseB(){
+      const chipsBox = qs('#phraseWords'); chipsBox.innerHTML = '';
+      B_state.phrase.forEach(w => {
+        const chip = $$('div', { class:'rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 px-3 py-1.5 text-sm' }, w);
+        chipsBox.appendChild(chip);
+      });
+      B_state.solved = {};
+      const inputsBox = qs('#inputsB'); inputsBox.innerHTML = '';
+      B_state.phrase.forEach((w, idx) => {
+        const row = $$('div', { class:'flex items-center gap-3' });
+        const label = $$('div', { class:'w-32 text-sm text-slate-700 dark:text-slate-200 truncate' }, w);
+        const inp = $$('input', { type:'text', inputmode:'numeric', placeholder:'Dígitos', class:'flex-1 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-3 py-1.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30' });
+        function onChange(){
+          const val = (inp.value || '').replace(/[^0-9]+/g,'');
+          inp.value = val;
+          const expected = wordToMajorNumber(w);
+          const ok = (val === expected);
+          inp.classList.remove('border-slate-300','dark:border-slate-700','border-emerald-300','dark:border-emerald-500','bg-emerald-50','dark:bg-emerald-500/10','text-emerald-700','dark:text-emerald-300','border-rose-300','dark:border-rose-500','bg-rose-50','dark:bg-rose-500/10','text-rose-700','dark:text-rose-300');
+          if (val.length === 0) {
+            inp.classList.add('border-slate-300','dark:border-slate-700');
+          } else if (ok) {
+            inp.classList.add('border-emerald-300','dark:border-emerald-500','bg-emerald-50','dark:bg-emerald-500/10','text-emerald-700','dark:text-emerald-300');
+          } else {
+            inp.classList.add('border-rose-300','dark:border-rose-500','bg-rose-50','dark:bg-rose-500/10','text-rose-700','dark:text-rose-300');
+          }
+          B_state.solved[idx] = ok;
+          checkCompletionB();
+        }
+        inp.addEventListener('input', onChange);
+        row.appendChild(label); row.appendChild(inp);
+        inputsBox.appendChild(row);
+      });
+      qs('#resultB').classList.add('hidden');
+    }
+
+    function allSolved(){
+      const n = B_state.phrase.length;
+      if (!n) return false;
+      for (let i=0;i<n;i++){
+        if (!B_state.solved[i]) return false;
+      }
+      return true;
+    }
+
+    function checkCompletionB(){
+      if (!B_state.running) return;
+      if (allSolved()){
+        const ms = Date.now() - B_state.tStart;
+        clearInterval(B_state.timer);
+        B_state.running = false;
+        setBestB(ms);
+        const box = qs('#resultB');
+        box.classList.remove('hidden');
+        box.textContent = 'Concluído em ' + (Math.round(ms/100)/10) + 's';
+        toast('Concluído!');
+      }
+    }
+
+    function updateTimerB(){
+      qs('#timerB').textContent = B_state.timeLeft + 's';
+    }
+
+    async function newChallengeB(){
+      const words = await fetchRandomPhrase();
+      B_state.phrase = words;
+      B_state.solved = {};
+      renderPhraseB();
+    }
+
+    function startB(){
+      const st = loadJSON(SETTINGS_KEY, { drillB:{timeLimit:90} });
+      B_state.running = true;
+      B_state.timeLeft = st.drillB.timeLimit || 90;
+      B_state.tStart = Date.now();
+      updateTimerB();
+      clearInterval(B_state.timer);
+      B_state.timer = setInterval(() => {
+        if (!B_state.running) return;
+        B_state.timeLeft -= 1;
+        updateTimerB();
+        if (B_state.timeLeft <= 0) {
+          clearInterval(B_state.timer);
+          B_state.running = false;
+          toast('Tempo!');
+        }
+      }, 1000);
+    }
+
+    // Wire UI
+    function initDrillA(){
+      qs('#startA').addEventListener('click', startA);
+      qs('#skipA').addEventListener('click', nextQuestionA);
+      nextQuestionA();
+    }
+    function initDrillB(){
+      qs('#newPhraseB').addEventListener('click', newChallengeB);
+      qs('#startB').addEventListener('click', startB);
+      newChallengeB();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initSettings();
+      initScores();
+      initDrillA();
+      initDrillB();
+    });
+  </script>
+</body>
+</html>
