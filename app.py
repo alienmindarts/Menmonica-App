@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from main import find_pairs_combinations, check_pair_in_cache, find_single_digit_words, word_to_major_number, load_two_digit_cache
 from itertools import product
-import os, json, random, threading
+import os, json, random, threading, re, unicodedata
 
 app = Flask(__name__, template_folder='templates')
 
@@ -64,11 +64,73 @@ def learn():
 def practice():
     return render_template('practice.html')
 
+# Helpers for words/phrases → digits mode
+def strip_diacritics(s: str) -> str:
+    try:
+        nfkd = unicodedata.normalize('NFD', s)
+        return ''.join(ch for ch in nfkd if not unicodedata.combining(ch))
+    except Exception:
+        return s
+
+def tokenize_phrase(text: str):
+    """
+    Tokenize a phrase into word tokens:
+    - Treat hyphens as separators
+    - Split on whitespace
+    - Remove punctuation and digits (keep letters incl. diacritics pre-normalization)
+    - Strip diacritics and lowercase for normalized form
+    Returns list of (original, normalized) tuples.
+    """
+    if not isinstance(text, str):
+        return []
+    raw = text.strip()
+    # Treat hyphens as separators
+    raw = raw.replace('-', ' ')
+    # Split on whitespace
+    parts = [p for p in re.split(r'\s+', raw) if p]
+    tokens = []
+    for p in parts:
+        original = p
+        # Keep letters only (Unicode Latin ranges)
+        cleaned = re.sub(r'[^A-Za-zÀ-ÖØ-öø-ÿ]', '', p, flags=re.UNICODE).strip()
+        if not cleaned:
+            continue
+        normalized = strip_diacritics(cleaned).lower()
+        tokens.append((original, normalized))
+    return tokens
 @app.post('/api/convert')
 def api_convert():
     data = request.get_json(silent=True) or {}
     number = str(data.get('number', '')).strip()
     blocks = data.get('blocks')
+    # Words/Phrases → Digits (auto-detect by presence of letters in 'text')
+    text = str((data.get('text') or '')).strip()
+    if text:
+        try:
+            has_letters = any((ch.isalpha() for ch in text))
+        except Exception:
+            has_letters = False
+        if has_letters:
+            try:
+                token_pairs = tokenize_phrase(text)
+            except Exception:
+                token_pairs = []
+            items = []
+            for orig, norm in token_pairs:
+                try:
+                    num = word_to_major_number(norm)
+                except Exception:
+                    num = ""
+                items.append({'original': orig, 'normalized': norm, 'number': str(num or "")})
+            full_number = ''.join(it['number'] for it in items)
+            return jsonify({
+                'mode': 'words',
+                'input': text,
+                'tokens': items,
+                'tokenCount': len(items),
+                'fullNumber': full_number,
+                'digitCount': len(full_number),
+            })
 
     # Cache em memória por requisição para evitar leituras repetidas do disco
     two_digit_cache = None
