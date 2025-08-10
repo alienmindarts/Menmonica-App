@@ -101,14 +101,14 @@
     <!-- Input card -->
     <section class="rounded-xl bg-white dark:bg-slate-950/60 shadow-soft border border-slate-200/70 dark:border-slate-800 p-5 sm:p-6">
       <div class="flex flex-col gap-4">
-        <label for="numberInput" class="text-sm font-medium text-slate-600 dark:text-slate-300">Insira um número</label>
+        <label for="numberInput" class="text-sm font-medium text-slate-600 dark:text-slate-300">Insira um número ou palavras</label>
         <div class="relative">
           <input
             id="numberInput"
             type="text"
-            inputmode="numeric"
+            inputmode="text"
             autocomplete="off"
-            placeholder="Ex: 3279"
+            placeholder="Ex: 3279 ou casa feliz"
             class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-4 py-3 text-lg outline-none ring-0 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition"
             aria-describedby="inputHelp"
           />
@@ -120,7 +120,7 @@
           </div>
         </div>
         <p id="inputHelp" class="text-sm text-slate-500 dark:text-slate-400">
-          Resultados em tempo real. Pode separar o número em blocos com espaço. Clique em qualquer resultado para copiar.
+          Resultados em tempo real. Pode inserir números ou palavras/frases. Use espaços (ou hífens) para separar blocos/palavras. Clique para copiar.
         </p>
         <div class="flex flex-wrap items-center gap-3 pt-1">
           <div class="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
@@ -143,7 +143,7 @@
     <!-- Empty state -->
     <section id="emptyState" class="mt-6 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-950/40 p-8 text-center">
       <p class="text-slate-600 dark:text-slate-300">
-        Insira um número para começar.
+        Insira um número ou palavras para começar.
       </p>
     </section>
 
@@ -170,6 +170,23 @@
         <span class="text-sm text-slate-500 dark:text-slate-400">Limite configurável acima</span>
       </div>
       <div id="combosList" class="grid gap-2"></div>
+    </section>
+
+    <!-- Palavras → Dígitos -->
+    <section id="wordsSection" class="hidden mt-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 p-6">
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="text-base font-semibold text-slate-700 dark:text-slate-200">Palavras → Dígitos</h2>
+        <div class="flex items-center gap-2">
+          <span id="tokenCounterWords" class="rounded-md bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-slate-700 dark:text-slate-200">0 tokens</span>
+          <span id="digitCounterWords" class="rounded-md bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-slate-700 dark:text-slate-200">0 dígitos</span>
+        </div>
+      </div>
+      <div class="mb-4 flex items-center gap-3">
+        <div class="text-sm text-slate-600 dark:text-slate-300">Número:</div>
+        <div id="fullNumberValue" class="font-mono text-base"></div>
+        <button id="copyFullNumber" class="ml-auto rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 px-2 py-1 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition" type="button">Copiar</button>
+      </div>
+      <div id="wordsList" class="grid gap-2"></div>
     </section>
 
     <!-- Nenhuma mnemónica -->
@@ -258,6 +275,7 @@
 
     // Estado UI
     let state = {
+      mode: 'digits', // 'digits' | 'words'
       input: '',
       partitions: [],
       totalResults: 0,
@@ -265,7 +283,12 @@
       combosPreviewCount: 0,
       loading: false,
       error: '',
-      selected: {}
+      selected: {},
+      // Words mode
+      tokens: [],
+      fullNumber: '',
+      tokenCount: 0,
+      digitCount: 0,
     };
 
     // Controlador para cancelar fetches antigos e sequenciador
@@ -287,6 +310,14 @@
     const elComboCounter = qs('#comboCounter');
     const elMaxCombos = qs('#maxCombos');
 
+    // Words-mode elements
+    const elWordsSection = qs('#wordsSection');
+    const elWordsList = qs('#wordsList');
+    const elFullNumber = qs('#fullNumberValue');
+    const elCopyFullNumber = qs('#copyFullNumber');
+    const elTokenCounterWords = qs('#tokenCounterWords');
+    const elDigitCounterWords = qs('#digitCounterWords');
+
     function setLoading(on) {
       state.loading = on;
       elSpinner.classList.toggle('hidden', !on);
@@ -298,6 +329,16 @@
       elErrorText.textContent = msg || '';
     }
 
+    const LETTERS_RE = /[A-Za-zÀ-ÖØ-öø-ÿ]/;
+    function hasLetters(str) {
+      return LETTERS_RE.test(str || '');
+    }
+    function sanitizeWords(str) {
+      return (str || '')
+        .replace(/[^A-Za-zÀ-ÖØ-öø-ÿ\s-]+/g, '')
+        .replace(/\s+/g, ' ')
+        .trimStart();
+    }
     function sanitizeDigitsSpaces(str) {
       return (str || '')
         .replace(/[^\d\s]+/g, '')
@@ -310,6 +351,13 @@
     }
 
     function renderCounters() {
+      if (state.mode === 'words') {
+        const t = state.tokenCount || 0;
+        const d = state.digitCount || 0;
+        elResultCounter.textContent = `${t} ${t === 1 ? 'token' : 'tokens'}`;
+        elComboCounter.textContent = `${d} ${d === 1 ? 'dígito' : 'dígitos'}`;
+        return;
+      }
       const r = state.totalResults || 0;
       const c = state.combosPreviewCount || 0;
       elResultCounter.textContent = `${r} ${r === 1 ? 'resultado' : 'resultados'}`;
@@ -322,11 +370,20 @@
     }
 
     function renderNoResults() {
+      if (state.mode === 'words') {
+        elNoResults.classList.add('hidden');
+        return;
+      }
       const show = state.input && !state.loading && !state.error && state.totalResults === 0;
       elNoResults.classList.toggle('hidden', !show);
     }
 
     function renderPartitions() {
+      if (state.mode === 'words') {
+        elPartitionsSection.classList.add('hidden');
+        elPartitionsGrid.innerHTML = '';
+        return;
+      }
       const show = state.partitions && state.partitions.length > 0;
       elPartitionsSection.classList.toggle('hidden', !show);
       elPartitionsGrid.innerHTML = '';
@@ -392,6 +449,11 @@
     }
 
     function renderCombos() {
+      if (state.mode === 'words') {
+        elCombosSection.classList.add('hidden');
+        elCombosList.innerHTML = '';
+        return;
+      }
       const show = state.combosPreview && state.combosPreview.length > 0;
       elCombosSection.classList.toggle('hidden', !show);
       elCombosList.innerHTML = '';
@@ -425,6 +487,47 @@
       renderNoResults();
       renderPartitions();
       renderCombos();
+      renderWords();
+    }
+
+    // Words-mode render
+    function renderWords() {
+      const isWords = state.mode === 'words';
+      if (elWordsSection) elWordsSection.classList.toggle('hidden', !isWords);
+      if (!isWords) return;
+
+      const t = state.tokenCount || 0;
+      const d = state.digitCount || 0;
+      if (elTokenCounterWords) elTokenCounterWords.textContent = `${t} ${t === 1 ? 'token' : 'tokens'}`;
+      if (elDigitCounterWords) elDigitCounterWords.textContent = `${d} ${d === 1 ? 'dígito' : 'dígitos'}`;
+      if (elFullNumber) elFullNumber.textContent = state.fullNumber || '';
+      if (elCopyFullNumber) {
+        elCopyFullNumber.onclick = () => {
+          if (state.fullNumber) copyText(state.fullNumber);
+        };
+      }
+      if (elWordsList) elWordsList.innerHTML = '';
+      (state.tokens || []).forEach(tok => {
+        const row = $$('div', {
+          class: 'animate-fadeIn group flex items-center justify-between rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 px-3 py-2'
+        });
+        const left = $$('div', { class: 'text-sm text-slate-700 dark:text-slate-200 truncate' }, tok.original || tok.normalized || '');
+        const rightWrap = $$('div', { class: 'flex items-center gap-2' });
+        const num = $$('div', { class: 'font-mono text-sm text-slate-700 dark:text-slate-200' }, tok.number || '');
+        const btn = $$('button', {
+          class: 'rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 px-2 py-1 text-xs text-slate-700 dark:text-slate-200 opacity-0 group-hover:opacity-100 transition',
+          type: 'button'
+        }, 'Copiar');
+
+        btn.addEventListener('click', (e) => { e.stopPropagation(); copyText(tok.number || ''); });
+        row.addEventListener('click', () => copyText(tok.number || ''));
+
+        rightWrap.appendChild(num);
+        rightWrap.appendChild(btn);
+        row.appendChild(left);
+        row.appendChild(rightWrap);
+        if (elWordsList) elWordsList.appendChild(row);
+      });
     }
 
     function reconcileSelection() {
@@ -487,15 +590,22 @@
       currentController = new AbortController();
       setLoading(true);
       try {
-        const norm = sanitizeDigitsSpaces(inputStr || '');
-        const blocks = parseBlocks(norm);
-        const payload = {
-          number: norm.replace(/\s/g, ''),
-          maxCombos
-        };
-        if (blocks.length) payload.blocks = blocks;
-
         const API_BASE = (window.API_BASE || '').replace(/\/+$/,'');
+        const isWords = hasLetters(inputStr || '');
+        let payload;
+        if (isWords) {
+          const normW = sanitizeWords(inputStr || '');
+          payload = { text: normW };
+        } else {
+          const norm = sanitizeDigitsSpaces(inputStr || '');
+          const blocks = parseBlocks(norm);
+          payload = {
+            number: norm.replace(/\s/g, ''),
+            maxCombos
+          };
+          if (blocks.length) payload.blocks = blocks;
+        }
+
         const res = await fetch((API_BASE ? API_BASE : '') + '/api/convert', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -511,25 +621,51 @@
         // Ignorar respostas "obsoletas"
         if (mySeq !== latestSeq) return;
 
-        state = {
-          ...state,
-          input: norm,
-          partitions: data.partitions || [],
-          totalResults: data.totalResults || 0,
-        };
-
-        // Ajustar seleções e recomputar combinações conforme necessário
-        reconcileSelection();
-        const hasSelection = state.selected && Object.keys(state.selected).length > 0;
-        if (hasSelection) {
-          const cap = parseInt(maxCombos, 10);
-          const limit = isNaN(cap) ? 50 : cap;
-          const combos = computeCombos(state.partitions, limit, state.selected);
-          state.combosPreview = combos;
-          state.combosPreviewCount = combos.length;
+        if (data && data.mode === 'words') {
+          // Words mode response
+          state = {
+            ...state,
+            mode: 'words',
+            input: (payload && payload.text) || (inputStr || ''),
+            // reset digits-mode fields
+            partitions: [],
+            totalResults: 0,
+            combosPreview: [],
+            combosPreviewCount: 0,
+            // words-mode fields
+            tokens: Array.isArray(data.tokens) ? data.tokens : [],
+            fullNumber: data.fullNumber || '',
+            tokenCount: data.tokenCount || 0,
+            digitCount: data.digitCount || 0,
+          };
         } else {
-          state.combosPreview = data.combosPreview || [];
-          state.combosPreviewCount = data.combosPreviewCount || 0;
+          // Digits mode response (backward-compatible)
+          const norm = sanitizeDigitsSpaces(inputStr || '');
+          state = {
+            ...state,
+            mode: 'digits',
+            input: norm,
+            partitions: data.partitions || [],
+            totalResults: data.totalResults || 0,
+            combosPreview: data.combosPreview || [],
+            combosPreviewCount: data.combosPreviewCount || 0,
+            // reset words-mode fields
+            tokens: [],
+            fullNumber: '',
+            tokenCount: 0,
+            digitCount: 0,
+          };
+
+          // Ajustar seleções e recomputar combinações conforme necessário
+          reconcileSelection();
+          const hasSelection = state.selected && Object.keys(state.selected).length > 0;
+          if (hasSelection) {
+            const cap = parseInt(maxCombos, 10);
+            const limit = isNaN(cap) ? 50 : cap;
+            const combos = computeCombos(state.partitions, limit, state.selected);
+            state.combosPreview = combos;
+            state.combosPreviewCount = combos.length;
+          }
         }
       } catch (err) {
         if (err && err.name === 'AbortError') {
@@ -538,10 +674,15 @@
         setError(err.message || 'Falha ao obter resultados.');
         state = {
           ...state,
+          mode: 'digits',
           partitions: [],
           totalResults: 0,
           combosPreview: [],
           combosPreviewCount: 0,
+          tokens: [],
+          fullNumber: '',
+          tokenCount: 0,
+          digitCount: 0,
         };
       } finally {
         if (mySeq === latestSeq) {
@@ -554,18 +695,24 @@
     // Eventos
     const onInput = debounce(() => {
       const raw = elInput.value;
-      const cleaned = sanitizeDigitsSpaces(raw);
+      const isWords = hasLetters(raw);
+      const cleaned = isWords ? sanitizeWords(raw) : sanitizeDigitsSpaces(raw);
       if (raw !== cleaned) {
         elInput.value = cleaned;
       }
       if (!cleaned.trim()) {
         state = {
           ...state,
+          mode: 'digits',
           input: '',
           partitions: [],
           totalResults: 0,
           combosPreview: [],
           combosPreviewCount: 0,
+          tokens: [],
+          fullNumber: '',
+          tokenCount: 0,
+          digitCount: 0,
         };
         // limpar seleções quando o input é esvaziado
         state.selected = {};
@@ -578,6 +725,8 @@
 
     elInput.addEventListener('input', onInput);
     elMaxCombos.addEventListener('change', () => {
+      // Só aplica a modo dígitos; não interfere com Palavras→Dígitos
+      if (state.mode !== 'digits') return;
       const cleaned = sanitizeDigitsSpaces(elInput.value);
       elInput.value = cleaned;
       const hasSelection = state.selected && Object.keys(state.selected).length > 0;
